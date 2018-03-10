@@ -1,23 +1,24 @@
 [[source]]
 
-url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
+url = "https://pypi.python.org/simple"
 
 
-[packages]
+[requires]
 
-keras = "*"
-tensorflow = "*"
-hyperopt = "*"
-scikit-learn = "*"
-networkx = "==1.11"
+python_version = "3.5"
 
 
 [dev-packages]
 
 
 
-[requires]
+[packages]
 
-python_version = "3.5"
+tensorflow-gpu = "==1.4.0"
+keras = "*"
+hyperopt = "*"
+scikit-learn = "*"
+numpy = "*"
+networkx = "==1.11"
