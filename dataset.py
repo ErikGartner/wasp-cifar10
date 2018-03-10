@@ -18,7 +18,6 @@ def preprocessing(img):
     x_offset = np.random.randint(8)
     y_offset = np.random.randint(8)
     img = img[x_offset:x_offset + 32, y_offset:y_offset + 32, :]
-    print(img.shape)
 
     # Apply cutout
     x_center = np.random.randint(32)
