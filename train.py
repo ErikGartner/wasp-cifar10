@@ -19,8 +19,7 @@ def create_callbacks(max_epochs):
             return lr
 
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S')
-    cbs.append(EarlyStopping(verbose=1, patience=10))
-    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=0.1, verbose=1, min_lr=1e-7, patience=5))
+    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5, verbose=1, min_lr=1e-6, patience=10))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
     cbs.append(ModelCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir, verbose=1, period=1, save_best_only=True))
     return cbs
@@ -36,7 +35,7 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
     model = create_densenet(
         input_shape=(32, 32, 3), dense_layers=dense_layers,
         growth_rate=growth_rate, nbr_classes=10, weight_decay=weight_decay,
-        compression=compression, dropout=compression)
+        compression=compression, dropout=dropout)
 
     cbs = create_callbacks(max_epochs)
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['acc'])
