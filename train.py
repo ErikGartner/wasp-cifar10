@@ -64,7 +64,7 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
     dump_infomation(os.path.join(logdir, run_dir), model, dense_layers,
                     growth_rate, compression, dropout, weight_decay,
                     batch_size)
-    cbs = create_callbacks(max_epochs)
+    cbs = create_callbacks(max_epochs, lr_decrease_factor, lr_patience)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
