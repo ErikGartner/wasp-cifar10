@@ -26,6 +26,8 @@ def dump_infomation(dump_dir, model):
     if dump_dir is None:
         return
 
+    os.makedirs(dump_dir, exist_ok=True)
+
     with open(os.path.join(dump_dir, 'model.json'), 'w') as f:
         json.dump(model.to_json(), f, indent=2)
 
