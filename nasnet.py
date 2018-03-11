@@ -80,7 +80,7 @@ def _create_normal_cell(x, x_1, nbr_filters, weight_decay):
 
 
 def _create_head(x, nbr_classes):
-    x = Flatten(x)
+    x = Flatten()(x)
     x = Dense(nbr_classes, activation='softmax', kernel_initializer='he_normal')(x)
     return x
 
