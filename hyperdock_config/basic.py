@@ -1,4 +1,7 @@
-from hyperopt import hp
+import hyperopt
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
+from hyperopt.pyll.base import scope
+
 
 SPACE = {
     'max_epochs': 50,
