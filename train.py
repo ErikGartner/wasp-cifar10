@@ -36,12 +36,12 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
             print(s, file=f)
     model.summary(print_fn=print_to_file)
     with open(os.path.join(dump_dir, 'params.txt'), 'w') as f:
-        f.write('dense_layers ', dense_layers)
-        f.write('growth_rate ', growth_rate)
-        f.write('compression ', compression)
-        f.write('dropout ', dropout)
-        f.write('weight_decay ', weight_decay)
-        f.write('batch_size ', batch_size)
+        f.write('dense_layers: %s\n' % dense_layers)
+        f.write('growth_rate: %s\n' % growth_rate)
+        f.write('compression: %s\n' % compression)
+        f.write('dropout: %s\n' % dropout)
+        f.write('weight_decay: %s\n' % weight_decay)
+        f.write('batch_size: %s\n' % batch_size)
 
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
