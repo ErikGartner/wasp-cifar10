@@ -75,4 +75,3 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
 
 if __name__ == '__main__':
     print(train_model())
-    run_dir =
