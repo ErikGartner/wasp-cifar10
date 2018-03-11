@@ -61,7 +61,9 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
     )
 
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S')
-    dump_infomation(os.path.join(logdir, run_dir), model)
+    dump_infomation(os.path.join(logdir, run_dir), model, dense_layers,
+                    growth_rate, compression, dropout, weight_decay,
+                    batch_size)
     cbs = create_callbacks(max_epochs)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
