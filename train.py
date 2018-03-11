@@ -37,7 +37,7 @@ def dump_infomation(dump_dir, model):
         json.dump(model.to_json(), f, indent=2)
 
     with open(os.path.join(dump_dir, 'model.txt'), 'w') as f:
-        f.write(model.summary)
+        f.write(model.summary())
 
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
