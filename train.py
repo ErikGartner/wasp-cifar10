@@ -58,6 +58,8 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
+    
+    dump_infomation(dump_dir, model)
 
     history = model.fit_generator(
         generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0),
@@ -66,7 +68,6 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
         verbose=1
     )
 
-    dump_infomation(dump_dir, model)
     best_val_acc = max(history.history['val_acc'])
     best_acc = max(history.history['acc'])
     return {
