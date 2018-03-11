@@ -13,6 +13,7 @@ from dataset import load_cifar10
 
 def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10):
     cbs = []
+    cbs.append(EarlyStopping(monitor='val_loss', patience=20, verbose=1, mode='auto'))
     cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
                                  verbose=1, min_lr=1e-6, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
@@ -22,17 +23,25 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
     return cbs
 
 
-def dump_infomation(dump_dir, model):
+def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
+                    dropout, weight_decay, batch_size):
     if dump_dir is None:
         return
 
     os.makedirs(dump_dir, exist_ok=True)
-
     with open(os.path.join(dump_dir, 'model.json'), 'w') as f:
         json.dump(model.to_json(), f, indent=2)
-
-    with open(os.path.join(dump_dir, 'model.txt'), 'w') as f:
-        f.write(model.summary())
+    def print_to_file(s):
+        with open(os.path.join(dump_dir, 'model.txt'), 'w') as f:
+            print(s, file=f)
+    model.summary(print_fn=print_to_file)
+    with open(os.path.join(dump_dir, 'params.txt'), 'w') as f:
+        f.write('dense_layers ', dense_layers)
+        f.write('growth_rate ', growth_rate)
+        f.write('compression ', compression)
+        f.write('dropout ', dropout)
+        f.write('weight_decay ', weight_decay)
+        f.write('batch_size ', batch_size)
 
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
