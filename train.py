@@ -11,21 +11,14 @@ from densenet import create_densenet
 from dataset import load_cifar10
 
 
-def create_callbacks(max_epochs):
+def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10):
     cbs = []
-
-    def learningrate_schedule(epoch, lr):
-        if epoch == int(max_epochs*0.5) or epoch == int(max_epochs*0.75):
-            return lr*0.1
-        else:
-            return lr
-
-    run_dir = datetime.today().strftime('%Y%m%d-%H%M%S')
-    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5, verbose=1,
-                                 min_lr=1e-6, patience=10))
+    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
+                                 verbose=1, min_lr=1e-6, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
-    cbs.append(ModelCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
-                               verbose=1, period=1, save_best_only=True))
+    cbs.append(ModelCheckpoint(
+        filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
+        verbose=1, period=1, save_best_only=True))
     return cbs
 
 
@@ -41,12 +34,14 @@ def dump_infomation(dump_dir, model):
 
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
-                dense_layers=[6, 12, 24, 16], growth_rate=24,
-                compression=0.5, dropout=0.2, weight_decay=1e-4, batch_size=64,
-                logdir='./logs', weightsdir='./weights', dump_dir=None):
+                dense_layers=[13, 13, 13], growth_rate=40, compression=0.5,
+                dropout=0.2, weight_decay=1e-4, batch_size=64, logdir='./logs',
+                weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10):
 
     start_time = time.time()
-    (generator_train, generator_test), (x_train, y_train), (x_test, y_test), (x_val, y_val) = load_cifar10()
+    ((generator_train, generator_test),
+     (x_train, y_train), (x_test, y_test),
+     (x_val, y_val)) = load_cifar10()
 
     model = create_densenet(
         input_shape=(32, 32, 3), dense_layers=dense_layers,
@@ -54,12 +49,12 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
         compression=compression, dropout=dropout
     )
 
+    run_dir = datetime.today().strftime('%Y%m%d-%H%M%S')
+    dump_infomation(os.path.join(logdir, dump_dir), model)
     cbs = create_callbacks(max_epochs)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
-
-    dump_infomation(dump_dir, model)
 
     history = model.fit_generator(
         generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0),
@@ -80,3 +75,4 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
 
 if __name__ == '__main__':
     print(train_model())
+    run_dir =

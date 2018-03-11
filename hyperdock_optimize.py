@@ -11,7 +11,6 @@ def read_params():
 if __name__ == '__main__':
 
     params = read_params()
-    params['dump_dir'] = '/hyperdock/out'
     params['logdir'] = '/hyperdock/out/logs'
     params['weightsdir'] = '/hyperdock/out'
 
