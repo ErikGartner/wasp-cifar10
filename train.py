@@ -43,7 +43,7 @@ def dump_infomation(dump_dir, model):
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
                 dense_layers=[6, 12, 24, 16], growth_rate=24,
                 compression=0.5, dropout=0.2, weight_decay=1e-4, batch_size=64,
-                logdir='./logs', weightsdir='./weights', info_dump_dir=None):
+                logdir='./logs', weightsdir='./weights', dump_dir=None):
 
     start_time = time.time()
     (generator_train, generator_test), (x_train, y_train), (x_test, y_test), (x_val, y_val) = load_cifar10()
@@ -58,7 +58,7 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
-    
+
     dump_infomation(dump_dir, model)
 
     history = model.fit_generator(
