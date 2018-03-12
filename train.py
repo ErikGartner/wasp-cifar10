@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import json
 
+import tensorflow as tf
 from keras.optimizers import *
 from keras.callbacks import *
 from keras.utils import multi_gpu_model
@@ -15,7 +16,7 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
     cbs = []
     cbs.append(EarlyStopping(monitor='val_loss', patience=20, verbose=1, mode='auto'))
     cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
-                                 verbose=1, min_lr=1e-6, patience=lr_patience))
+                                 verbose=1, min_lr=1e-7, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
     cbs.append(ModelCheckpoint(
         filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
@@ -45,8 +46,8 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
 
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
-                dense_layers=[13, 13, 13], growth_rate=40, compression=0.5,
-                dropout=0.2, weight_decay=1e-4, batch_size=64, logdir='./logs',
+                dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
+                dropout=0.0, weight_decay=1e-4, batch_size=32, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10):
 
     start_time = time.time()
