@@ -66,11 +66,11 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
         f.write('batch_size: %s\n' % batch_size)
 
 
-def train_model(max_epochs=300, optimizer=SGD(lr=0.05, momentum=0.9, nesterov=True),
+def train_model(max_epochs=300, start_lr=0.1,
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
                 dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
-                nbr_gpus=2):
+                nbr_gpus=1):
     # Create a dir in the logs catalog and dump info
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S-%f')
 
@@ -101,6 +101,9 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.05, momentum=0.9, nesterov=Tr
     dump_infomation(os.path.join(logdir, run_dir), orig_model, dense_layers,
                     growth_rate, compression, dropout, weight_decay,
                     batch_size)
+
+    # Setup optimizer
+    optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True)
 
     cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience, orig_model)
     model.compile(optimizer=optimizer,
