@@ -13,7 +13,7 @@ from dataset import load_cifar10
 
 
 def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10,
-                     model):
+                     model=None):
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
@@ -25,7 +25,7 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
                      mode, period)
 
         def set_model(self, model):
-            if model not is None:
+            if model is not None:
                 # Disable changing model
                 return
             else:
@@ -68,9 +68,9 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
 
 def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
-                dropout=0.0, weight_decay=1e-4, batch_size=32, logdir='./logs',
+                dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
-                nbr_gpus=1):
+                nbr_gpus=2):
     # Create a dir in the logs catalog and dump info
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S-%f')
 
@@ -88,7 +88,7 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
                 growth_rate=growth_rate, nbr_classes=10, weight_decay=weight_decay,
                 compression=compression, dropout=dropout
             )
-            model = multi_gpu_model(orig_model, nbr_gpus)
+        model = multi_gpu_model(orig_model, nbr_gpus)
 
     else:
         model = orig_model = create_densenet(
@@ -98,7 +98,7 @@ def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=Tru
         )
 
     # Write model info to file
-    dump_infomation(os.path.join(logdir, run_dir), model, dense_layers,
+    dump_infomation(os.path.join(logdir, run_dir), orig_model, dense_layers,
                     growth_rate, compression, dropout, weight_decay,
                     batch_size)
 
