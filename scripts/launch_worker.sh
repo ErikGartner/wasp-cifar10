@@ -1,0 +1,1 @@
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd)/results:/results -e HYPERDOCK_RESULT_DIR=$(pwd)/results -e HYPERDOCK_DATA_DIR=$(pwd)/data -e MONGO_URL=mongo://172.17.0.1:27017/hyperdock -e HYPERDOCK_RUNTIME="nvidia" erikgartner/hyperdock-worker:latest
