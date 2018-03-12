@@ -53,7 +53,7 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
         json.dump(model.to_json(), f, indent=2)
 
     def print_to_file(s):
-        with open(os.path.join(dump_dir, 'model.txt'), 'w') as f:
+        with open(os.path.join(dump_dir, 'model.txt'), 'a') as f:
             print(s, file=f)
     model.summary(print_fn=print_to_file)
 
@@ -66,7 +66,7 @@ def dump_infomation(dump_dir, model, dense_layers, growth_rate, compression,
         f.write('batch_size: %s\n' % batch_size)
 
 
-def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
+def train_model(max_epochs=300, optimizer=SGD(lr=0.05, momentum=0.9, nesterov=True),
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
                 dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
