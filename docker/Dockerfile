@@ -7,4 +7,4 @@ COPY ./ ./
 
 RUN pip install keras hyperopt scikit-learn
 
-CMD python hyperdock_optimize.py
+CMD python optimize.py
