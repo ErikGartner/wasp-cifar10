@@ -6,7 +6,7 @@ import hyperopt.pyll.stochastic
 
 SPACE = hp.choice('network_layout', [
     {
-        'max_epochs': 100,
+        'max_epochs': 200,
 
         # Deep network, near memory limit
         'dense_layers': [scope.int(hp.quniform('nbr_filters', 6, 16, 1))] *

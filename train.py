@@ -35,7 +35,6 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
-    cbs.append(EarlyStopping(monitor='val_loss', patience=20, verbose=1, mode='auto'))
     cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
                                  verbose=1, min_lr=1e-7, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))

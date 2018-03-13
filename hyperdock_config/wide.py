@@ -6,7 +6,7 @@ import hyperopt.pyll.stochastic
 
 SPACE = hp.choice('network_layout', [
     {
-        'max_epochs': 100,
+        'max_epochs': 200,
 
         # Big network, near memory limit
         'dense_layers': [20, 20, 20],
