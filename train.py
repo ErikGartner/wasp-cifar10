@@ -123,7 +123,7 @@ def train_model(max_epochs=300, start_lr=0.1,
         generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0),
         callbacks=cbs, epochs=max_epochs,
         validation_data=generator_test.flow(x_val, y_val, seed=0),
-        use_multiprocessing=True, workers=1, max_queue_size=batch_size,
+        use_multiprocessing=True, workers=2, max_queue_size=batch_size,
         verbose=1, initial_epoch=initial_epoch
     )
 
