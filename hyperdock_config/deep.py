@@ -14,7 +14,7 @@ SPACE = hp.choice('network_layout', [
         'batch_size': 64,
 
         # Params
-        'growth_rate': scope.int(hp.quniform('growth_rate', 24, 60, 6)),
+        'growth_rate': scope.int(hp.quniform('growth_rate', 24, 40, 6)),
         'start_lr': 10 ** scope.int(hp.quniform('start_lr', -6, 1, 1)),
         'dropout': hp.quniform('dropout', 0, 0.2, 0.05),
     }

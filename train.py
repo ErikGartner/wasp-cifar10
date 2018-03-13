@@ -70,7 +70,7 @@ def train_model(max_epochs=300, start_lr=0.1,
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
                 dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
-                nbr_gpus=1, model_path=None):
+                nbr_gpus=1, model_path=None, start_epoch=1):
     # Create a dir in the logs catalog and dump info
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S-%f')
 
@@ -123,7 +123,8 @@ def train_model(max_epochs=300, start_lr=0.1,
         generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0),
         callbacks=cbs, epochs=max_epochs,
         validation_data=generator_test.flow(x_val, y_val, seed=0),
-        verbose=1
+        use_multiprocessing=True, workers=1, max_queue_size=batch_size,
+        verbose=1, initial_epoch=initial_epoch
     )
 
     best_val_acc = max(history.history['val_acc'])
