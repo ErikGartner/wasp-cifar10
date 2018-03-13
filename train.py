@@ -7,6 +7,7 @@ from keras.optimizers import *
 from keras.callbacks import *
 from keras.utils import multi_gpu_model
 from keras import backend as K
+from keras.models import load_model
 
 from densenet import create_densenet
 from dataset import load_cifar10
@@ -69,7 +70,7 @@ def train_model(max_epochs=300, start_lr=0.1,
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
                 dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
-                nbr_gpus=1):
+                nbr_gpus=1, model_path=None):
     # Create a dir in the logs catalog and dump info
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S-%f')
 
@@ -80,21 +81,30 @@ def train_model(max_epochs=300, start_lr=0.1,
      (x_val, y_val)) = load_cifar10()
 
     # Create model using supplied params
+    # Load model from file if the argument model_path is supplied.
+    # Use mutli_gpu setup if enabled
     if nbr_gpus > 1:
         with tf.device('/cpu:0'):
+            if model_path is not None:
+                orig_model = load_model(model_path)
+            else:
+                orig_model = create_densenet(
+                    input_shape=(32, 32, 3), dense_layers=dense_layers,
+                    growth_rate=growth_rate, nbr_classes=10, weight_decay=weight_decay,
+                    compression=compression, dropout=dropout
+                )
+        model = multi_gpu_model(orig_model, nbr_gpus)
+
+    else:
+        if model_path is not None:
+            orig_model = load_model(model_path)
+        else:
             orig_model = create_densenet(
                 input_shape=(32, 32, 3), dense_layers=dense_layers,
                 growth_rate=growth_rate, nbr_classes=10, weight_decay=weight_decay,
                 compression=compression, dropout=dropout
             )
-        model = multi_gpu_model(orig_model, nbr_gpus)
-
-    else:
-        model = orig_model = create_densenet(
-            input_shape=(32, 32, 3), dense_layers=dense_layers,
-            growth_rate=growth_rate, nbr_classes=10, weight_decay=weight_decay,
-            compression=compression, dropout=dropout
-        )
+        model = orig_model
 
     # Write model info to file
     dump_infomation(os.path.join(logdir, run_dir), orig_model, dense_layers,
