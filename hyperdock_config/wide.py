@@ -9,12 +9,13 @@ SPACE = hp.choice('network_layout', [
         'max_epochs': 200,
 
         # Big network, near memory limit
-        'dense_layers': [20, 20, 20],
-        'batch_size': 32,
+        'dense_layers': [scope.int(hp.quniform('layer1', 14, 22, 1)), scope.int(hp.quniform('layer2', 14, 22, 1)), scope.int(hp.quniform('layer3', 14, 22, 1))],
+        'batch_size': 64,
+  	'nbr_gpus': 2,
 
         # Params
-        'growth_rate': scope.int(hp.quniform('growth_rate', 40, 60, 5)),
-        'start_lr': 2 ** scope.int(hp.quniform('start_lr', -6, 1, 1)),
+        'growth_rate': scope.int(hp.quniform('growth_rate', 35, 60, 5)),
+        'start_lr': 0.5 ** scope.int(hp.quniform('start_lr', 1, 2, 1)),
         'dropout': hp.quniform('dropout', 0, 0.2, 0.05),
     }
 ])
