@@ -10,11 +10,11 @@ SPACE = hp.choice('network_layout', [
 
         # Deep network, near memory limit
         'dense_layers': [scope.int(hp.quniform('nbr_filters', 6, 16, 1))] *
-                         scope.int(hp.quniform('nbr_layers', 3, 6, 1)),
+                         scope.int(hp.quniform('nbr_layers', 3, 8, 1)),
         'batch_size': 64,
 
         # Params
-        'growth_rate': scope.int(hp.quniform('growth_rate', 24, 40, 6)),
+        'growth_rate': scope.int(hp.quniform('growth_rate', 12, 30, 6)),
         'start_lr': 10 ** scope.int(hp.quniform('start_lr', -6, 1, 1)),
         'dropout': hp.quniform('dropout', 0, 0.2, 0.05),
     }

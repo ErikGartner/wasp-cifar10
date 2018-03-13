@@ -138,4 +138,5 @@ def train_model(max_epochs=300, start_lr=0.1,
 
 
 if __name__ == '__main__':
+    K.set_image_data_format('channels_last')
     print(train_model())
