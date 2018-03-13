@@ -5,6 +5,6 @@ WORKDIR /app
 
 COPY ./ ./
 
-RUN pip install keras hyperopt scikit-learn
+RUN pip install keras hyperopt scikit-learn networkx==1.11
 
 CMD python optimize.py
