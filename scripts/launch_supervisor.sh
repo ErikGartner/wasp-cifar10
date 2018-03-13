@@ -1,1 +1,1 @@
-docker run -it --rm -v $(pwd)/hyperdock_config:/app/hyperdock/config:ro erikgartner/hyperdock-supervisor:latest --name trial1 --image erikgartner/wasp-cifar --config_module basic --trials 20 --mongo mongo://172.17.0.1:27017/hyperdock/jobs
+docker run -it --rm -v $(pwd)/hyperdock_config:/app/hyperdock/config:ro erikgartner/hyperdock-supervisor:latest --name wide --image erikgartner/wasp-cifar --config_module wide --trials 26 --mongo mongo://172.17.0.1:27017/hyperdock/jobs
