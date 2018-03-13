@@ -70,7 +70,7 @@ def train_model(max_epochs=300, start_lr=0.1,
                 dense_layers=[20, 20, 20], growth_rate=60, compression=0.5,
                 dropout=0.0, weight_decay=1e-4, batch_size=64, logdir='./logs',
                 weightsdir='./weights', lr_decrease_factor=0.5, lr_patience=10,
-                nbr_gpus=1, model_path=None, initial_epoch=1):
+                nbr_gpus=1, model_path=None, initial_epoch=0):
     # Create a dir in the logs catalog and dump info
     run_dir = datetime.today().strftime('%Y%m%d-%H%M%S-%f')
 
