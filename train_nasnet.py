@@ -39,10 +39,10 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
     return cbs
 
 
-def train_model(max_epochs=300, optimizer=SGD(lr=0.1, momentum=0.9, nesterov=True),
-                nbr_blocks=2, weight_decay=1e-4, nbr_filters=128, batch_size=64,
+def train_model(max_epochs=300, start_lr=0.05,
+                nbr_blocks=2, weight_decay=1e-4, nbr_filters=196, batch_size=64,
                 logdir='./logs', weightsdir='./weights_nasnet', lr_decrease_factor=0.5,
-                lr_patience=10, nbr_gpus=1, model_path=None, initial_epoch=0):
+                lr_patience=10, nbr_gpus=2, model_path=None, initial_epoch=0):
 
     # Create a dir in the logs catalog and dump info
     run_dir = 'nasnet_%s' % datetime.today().strftime('%Y%m%d-%H%M%S-%f')
