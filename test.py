@@ -42,8 +42,8 @@ if __name__ == '__main__':
             try:
                 print('Testing %s' % model_file)
                 loss = test_model(os.path.join(path, model_file))
-                if loss[1] > best_acc[1]:
-                    best_acc = lossg
+                if loss[1] > best_loss[1]:
+                    best_loss = lossg
                     best_model = model_file
 
             except RuntimeError:
