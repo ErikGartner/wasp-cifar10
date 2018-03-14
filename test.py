@@ -18,11 +18,10 @@ def test_model(model_path=None):
 
     model = load_model(model_path)
 
-    if not model.built:
-        optimizer = SGD(lr=0.1, momentum=0.9, nesterov=True)
-        model.compile(optimizer=optimizer,
-                      loss='sparse_categorical_crossentropy',
-                      metrics=['acc'])
+    optimizer = SGD(lr=0.1, momentum=0.9, nesterov=True)
+    model.compile(optimizer=optimizer,
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['acc'])
 
     loss = model.evaluate_generator(generator_test.flow(x_test, y_test))
     print('Loss was: %s' % loss)
@@ -44,10 +43,10 @@ if __name__ == '__main__':
                 print('Testing %s' % model_file)
                 loss = test_model(os.path.join(path, model_file))
                 if loss[1] > best_acc[1]:
-                    best_acc = loss
+                    best_acc = lossg
                     best_model = model_file
 
-            except:
+            except RuntimeError:
                 print('Some error occured!')
 
         print('Best model was %s with loss %s' % (best_model, best_loss))
