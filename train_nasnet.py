@@ -66,7 +66,11 @@ def train_model(max_epochs=300, start_lr=0.05,
                                            nbr_blocks=nbr_blocks,
                                            weight_decay=weight_decay,
                                            nbr_classes=10,
-                                           nbr_filters=nbr_filters)
+                                           nbr_filters=nbr_filters,
+                                           stem_multiplier=3,
+                                           filter_multiplier=2,
+                                           dimension_reduction=2,
+                                           final_filters=768)
         model = multi_gpu_model(orig_model, nbr_gpus)
 
     else:
@@ -78,7 +82,11 @@ def train_model(max_epochs=300, start_lr=0.05,
                                        nbr_blocks=nbr_blocks,
                                        weight_decay=weight_decay,
                                        nbr_classes=10,
-                                       nbr_filters=nbr_filters)
+                                       nbr_filters=nbr_filters,
+                                       stem_multiplier=3,
+                                       filter_multiplier=2,
+                                       dimension_reduction=2,
+                                       final_filters=768)
         model = orig_model
 
     # # Write model info to file
