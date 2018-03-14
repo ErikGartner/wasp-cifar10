@@ -35,13 +35,22 @@ if __name__ == '__main__':
 
     if os.path.isdir(path):
         print("Testing all models in %s" % path)
+        best_loss = [10000, 0]
+        best_model = None
+
         for model_file in os.listdir(path):
 
             try:
                 print('Testing %s' % model_file)
-                test_model(os.path.join(path, model_file))
+                loss = test_model(os.path.join(path, model_file))
+                if loss[1] > best_acc[1]:
+                    best_acc = loss
+                    best_model = model_file
+
             except:
                 print('Some error occured!')
+
+        print('Best model was %s with loss %s' % (best_model, best_loss))
 
     else:
         test_model(path)
