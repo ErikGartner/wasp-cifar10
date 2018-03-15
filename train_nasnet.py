@@ -51,7 +51,7 @@ def train_model(max_epochs=300, start_lr=0.025,
     start_time = time.time()
     ((generator_train, generator_test),
      (x_train, y_train), (x_test, y_test),
-     (x_val, y_val)) = load_cifar10()
+     (x_val, y_val)) = load_cifar10(repeat_y=2)
 
     # Create model using supplied params
     # Load model from file if the argument model_path is supplied.
