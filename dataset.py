@@ -32,7 +32,7 @@ def preprocessing(img):
     return img
 
 
-def load_cifar10(val_size=0.1, repeat_y=1):
+def load_cifar10(val_size=0.1):
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train, x_val, y_train, y_val = train_test_split(x_train, y_train,
                                                       test_size=val_size,
@@ -66,11 +66,6 @@ def load_cifar10(val_size=0.1, repeat_y=1):
 
     generator_train.fit(x_train)
     generator_test.fit(x_train)
-
-    # Repeat the y value for multiple losses using the same label
-    y_train = np.repeat(y_train, repeat_y, axis=1)
-    y_val = np.repeat(y_val, repeat_y, axis=1)
-    y_test = np.repeat(y_test, repeat_y, axis=1)
 
     return ((generator_train, generator_test), (x_train, y_train),
             (x_test, y_test), (x_val, y_val))
