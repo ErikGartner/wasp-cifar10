@@ -189,7 +189,12 @@ def _reduce_prev_layer(x, x_1, nbr_filters):
     return x_1
 
 
-def _create_head(x, nbr_classes, final_filters):
+def _create_auxhead(x, nbr_classes, final_filters=768):
+    """
+    Aux head creates an auxiliary loss in the network to help training.
+    The loss is weighted by 0.4 in the paper and placed before the 2nd reduction
+    layer.
+    """
     x = Activation('relu')(x)
     x = AveragePooling2D((5, 5), strides=(3, 3), padding='valid')(x)
     x = Convolution2D(128, kernel_size=(1, 1), strides=(1, 1), padding='same')(x)
@@ -203,6 +208,15 @@ def _create_head(x, nbr_classes, final_filters):
     return x
 
 
+def _create_head(x, nbr_classes, dropout_prob=0.0):
+    x = Activation('relu')(x)
+    x = GlobalAveragePooling2D()(x)
+    if dropout_prob > 0:
+        x = Dropout(dropout_prob)(x)
+    x = Dense(nbr_classes, activation='softmax', kernel_initializer='he_normal')(x)
+    return x
+
+
 def _create_steam(x, nbr_filters, stem_multiplier):
     x = Convolution2D(nbr_filters * stem_multiplier, kernel_size=(3, 3), strides=(1, 1), padding='same')(x)
     x = BatchNormalization()(x)
@@ -211,7 +225,7 @@ def _create_steam(x, nbr_filters, stem_multiplier):
 
 def create_nasnet(input_shape, nbr_normal_cells, nbr_blocks, weight_decay,
                   nbr_classes, nbr_filters, stem_multiplier, filter_multiplier,
-                  dimension_reduction, final_filters):
+                  dimension_reduction, final_filters, dropout_prob=0.0):
 
     ipt = Input(input_shape)
     x = _create_steam(ipt, nbr_filters, stem_multiplier)
@@ -226,14 +240,18 @@ def create_nasnet(input_shape, nbr_normal_cells, nbr_blocks, weight_decay,
             x_1 = x
             x = y
 
+        if i == 1:
+            # Before the second reduction cell, add the auxiliary head
+            aux_head = _create_auxhead(x, nbr_classes, final_filters)
+
         # Reduction cell decreases HxW but increases filters
         filters = filters * filter_multiplier
         y, _ = _create_reduction_cell(x, x_1, filters, weight_decay, (dimension_reduction, dimension_reduction))
         x_1 = x
         x = y
 
-    y = _create_head(x, nbr_classes, final_filters)
-    model = Model(inputs=ipt, outputs=y, name='NASNet')
+    y = _create_head(x, nbr_classes, dropout_prob)
+    model = Model(inputs=ipt, outputs=[y, aux_head], name='NASNet')
     return model
 
 

@@ -100,7 +100,8 @@ def train_model(max_epochs=300, start_lr=0.025,
     cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience, orig_model)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
-                  metrics=['acc'])
+                  loss_weights=[1, 0.4],    # Weight the auxiliary head by 0.4
+                  metrics=['accuracy'])
 
     history = model.fit_generator(
         generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0),
