@@ -192,7 +192,7 @@ def _reduce_prev_layer(x, x_1, nbr_filters):
 def _create_head(x, nbr_classes, final_filters):
     x = Activation('relu')(x)
     x = AveragePooling2D((5, 5), strides=(3, 3), padding='valid')(x)
-    x = Convolution2D(final_filters // 6, kernel_size=(1, 1), strides=(1, 1), padding='same')(x)
+    x = Convolution2D(128, kernel_size=(1, 1), strides=(1, 1), padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = Convolution2D(final_filters, (int(x.shape[1]), int(x.shape[2])), strides=(1, 1), padding='valid')(x)
