@@ -69,3 +69,13 @@ def load_cifar10(val_size=0.1):
 
     return ((generator_train, generator_test), (x_train, y_train),
             (x_test, y_test), (x_val, y_val))
+
+
+def multi_generator(generator, X, Y, batch_size, duplicate_y=2, seed=0):
+
+    x_gen = generator.flow(X, batch_size=batch_size, seed=seed)
+    y_gen = generator.flow(y, batch_size=batch_size, seed=seed)
+    while True:
+        x_i = x_gen.next()
+        y_i = y_gen.next()
+        yield (x_i, [y_i] * duplicate_y)

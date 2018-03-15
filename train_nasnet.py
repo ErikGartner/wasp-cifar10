@@ -5,7 +5,7 @@ from keras.callbacks import *
 from keras.utils import multi_gpu_model
 from keras import backend as K
 
-from nasnet import create_nasnet
+from nasnet import create_nasnet, multi_generator
 from dataset import load_cifar10
 
 
@@ -104,9 +104,10 @@ def train_model(max_epochs=300, start_lr=0.025,
                   metrics=['accuracy'])
 
     history = model.fit_generator(
+        multi_generator(generator, x_train, y_train, batch_size=batch_size, seed=seed),
         generator_train.flow(x_train, [y_train, y_train], batch_size=batch_size, seed=0),
         callbacks=cbs, epochs=max_epochs,
-        validation_data=generator_test.flow(x_val, [y_val, y_val], seed=0),
+        validation_data=multi_generator(generator, x_val, y_val, batch_size=batch_size, seed=seed),
         use_multiprocessing=True, workers=2, max_queue_size=batch_size,
         verbose=1, initial_epoch=initial_epoch
     )
