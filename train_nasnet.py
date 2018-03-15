@@ -95,7 +95,7 @@ def train_model(max_epochs=300, start_lr=0.05,
     #                 batch_size)
 
     # Setup optimizer
-    optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True)
+    optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True, clipnorm=5.0)
 
     cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience, orig_model)
     model.compile(optimizer=optimizer,
