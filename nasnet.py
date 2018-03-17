@@ -3,6 +3,7 @@ from keras.models import Model
 from keras.layers.normalization import *
 from keras.regularizers import *
 import tensorflow as tf
+from keras import backend as K
 
 
 def _sep_layer(x, nbr_filters, kernel_size, weight_decay, strides=(1, 1),
@@ -92,6 +93,26 @@ def _factorized_reduction(x, nbr_filters, strides):
 
     x = Concatenate(axis=3)([path1, path2])
     x = BatchNormalization()(x)
+    return x
+
+
+def _drop_path(x, keep_prob):
+    is_training = K.learning_phase() == 1
+    if not is_training or keep_prob >= 1:
+        return x
+
+    def drop_path_layer(x, keep_prob):
+        batch_size = tf.shape(x)[0]
+        noise_shape = [batch_size, 1, 1, 1]
+        random_tensor = keep_prob
+        random_tensor += tf.random_uniform(noise_shape, dtype=tf.float32)
+        binary_tensor = tf.floor(random_tensor)
+        x = tf.div(x, keep_prob) * binary_tensor
+        return x
+
+    x = Lambda(drop_path_layer,
+               arguments={'keep_prob': keep_prob},
+               output_shape=lambda x: x)(x)
     return x
 
 
