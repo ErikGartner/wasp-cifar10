@@ -16,6 +16,10 @@ class DropPath(Layer):
         super().build(input_shape)
 
     def call(self, x):
+        is_training = K.learning_phase() == 1
+        if not is_training:
+            return x
+
         batch_size = tf.shape(x)[0]
         noise_shape = [batch_size, 1, 1, 1]
         random_tensor = self.keep_prob
