@@ -4,19 +4,20 @@ from keras.optimizers import *
 from keras.callbacks import *
 from keras.utils import multi_gpu_model
 from keras import backend as K
+import tensorflow as tf
 
-from nasnet import create_nasnet, multi_generator
-from dataset import load_cifar10
+from nasnet import create_nasnet
+from dataset import load_cifar10, multi_generator
 
 
 def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10,
-                     model=None):
+                     model=None, epoch_tensor=None):
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
         def __init__(self, filepath, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
+                     save_best_only=False, save_weights_only=False,
+                     mode='auto', period=1):
             super().__init__(filepath, monitor, verbose,
                      save_best_only, save_weights_only,
                      mode, period)
@@ -28,13 +29,19 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
             else:
                 super().set_model(model)
 
-    cbs = []
+    def update_epoch_tensor(epoch, logs):
+        if epoch_tensor is not None:
+            tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
+
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
+
+    cbs = []
     cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
                                  verbose=1, min_lr=1e-7, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
+    cbs.append(LambdaCallback(on_epoch_begin=update_epoch_tensor))
     cbs.append(checkpointing)
     return cbs
 
@@ -53,6 +60,9 @@ def train_model(max_epochs=300, start_lr=0.025,
      (x_train, y_train), (x_test, y_test),
      (x_val, y_val)) = load_cifar10()
 
+    # Create current epoch holding tensor
+    epoch_tensor = tf.Variable(initial_epoch, dtype=tf.int32, trainable=False)
+
     # Create model using supplied params
     # Load model from file if the argument model_path is supplied.
     # Use mutli_gpu setup if enabled
@@ -70,7 +80,11 @@ def train_model(max_epochs=300, start_lr=0.025,
                                            stem_multiplier=3,
                                            filter_multiplier=2,
                                            dimension_reduction=2,
-                                           final_filters=768)
+                                           final_filters=768,
+                                           dropout_prob=0.0,
+                                           drop_path_keep=0.6,
+                                           max_epochs=300,
+                                           epoch_tensor=epoch_tensor)
         model = multi_gpu_model(orig_model, nbr_gpus)
 
     else:
@@ -86,30 +100,39 @@ def train_model(max_epochs=300, start_lr=0.025,
                                        stem_multiplier=3,
                                        filter_multiplier=2,
                                        dimension_reduction=2,
-                                       final_filters=768)
+                                       final_filters=768,
+                                       dropout_prob=0.0,
+                                       drop_path_keep=0.6,
+                                       max_epochs=300,
+                                       epoch_tensor=epoch_tensor)
         model = orig_model
-
-    # # Write model info to file
-    # dump_infomation(os.path.join(logdir, run_dir), orig_model, dense_layers,
-    #                 growth_rate, compression, dropout, weight_decay,
-    #                 batch_size)
 
     # Setup optimizer
     optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True, clipnorm=5.0)
 
-    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience, orig_model)
+    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience,
+                           orig_model, epoch_tensor)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   loss_weights=[1, 0.4],    # Weight the auxiliary head by 0.4
                   metrics=['accuracy'])
 
+    # Setup the multi output generators
+    train = generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0)
+    test = generator_test.flow(x_val, y_val, batch_size=batch_size, seed=0)
+    mul_train = multi_generator(train)
+    mul_test = multi_generator(test)
+    steps_per_epoch = len(train)
+    validation_steps = len(test)
+
+    # Start training
     history = model.fit_generator(
-        multi_generator(generator, x_train, y_train, batch_size=batch_size, seed=seed),
-        generator_train.flow(x_train, [y_train, y_train], batch_size=batch_size, seed=0),
+        mul_train,
         callbacks=cbs, epochs=max_epochs,
-        validation_data=multi_generator(generator, x_val, y_val, batch_size=batch_size, seed=seed),
+        validation_data=mul_test,
         use_multiprocessing=True, workers=2, max_queue_size=batch_size,
-        verbose=1, initial_epoch=initial_epoch
+        verbose=1, initial_epoch=initial_epoch, steps_per_epoch=steps_per_epoch,
+        validation_steps=validation_steps
     )
 
     best_val_acc = max(history.history['val_acc'])
