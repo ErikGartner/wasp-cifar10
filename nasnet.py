@@ -6,6 +6,28 @@ import tensorflow as tf
 from keras import backend as K
 
 
+class DropPath(Layer):
+
+    def __init__(self, keep_prob, **kwargs):
+        super().__init__(**kwargs)
+        self.keep_prob = keep_prob
+
+    def build(self, input_shape):
+        super().build(input_shape)
+
+    def call(self, x):
+        batch_size = tf.shape(x)[0]
+        noise_shape = [batch_size, 1, 1, 1]
+        random_tensor = self.keep_prob
+        random_tensor += tf.random_uniform(noise_shape, dtype=tf.float32)
+        binary_tensor = tf.floor(random_tensor)
+        x = tf.div(x, self.keep_prob) * binary_tensor
+        return x
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
 def _sep_layer(x, nbr_filters, kernel_size, weight_decay, strides=(1, 1),
                nbr_layers=2, keep_prob=1):
 
@@ -100,22 +122,11 @@ def _factorized_reduction(x, nbr_filters, strides):
 
 
 def _drop_path(x, keep_prob):
-    #is_training = K.learning_phase() == 1
-    #if not is_training or keep_prob >= 1:
-    #    return x
-
-    def drop_path_layer(x, keep_prob):
-        batch_size = tf.shape(x)[0]
-        noise_shape = [batch_size, 1, 1, 1]
-        random_tensor = keep_prob
-        random_tensor += tf.random_uniform(noise_shape, dtype=tf.float32)
-        binary_tensor = tf.floor(random_tensor)
-        x = tf.div(x, keep_prob) * binary_tensor
+    is_training = K.learning_phase() == 1
+    if not is_training or keep_prob >= 1:
         return x
 
-    x = Lambda(drop_path_layer,
-               arguments={'keep_prob': keep_prob},
-               output_shape=lambda x: x)(x)
+    x = DropPath(keep_prob=keep_prob)(x)
     return x
 
 
@@ -135,9 +146,6 @@ def _calc_drop_keep_prob(keep_prob, cell_nbr, total_cells, epoch_tensor,
     current_ratio = tf.cast(current_ratio, tf.float32)
     current_ratio = tf.minimum(1.0, current_ratio)
     prob = (1 - current_ratio * (1 - prob))
-    with tf.device('/cpu:0'):
-        tf.summary.scalar('drop_path_keep_prob', prob)
-
     return prob
 
 
