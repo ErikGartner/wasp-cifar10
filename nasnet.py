@@ -279,7 +279,7 @@ def _create_head(x, nbr_classes, dropout_prob=0.0):
     return x
 
 
-def _create_steam(x, nbr_filters, stem_multiplier):
+def _create_stem(x, nbr_filters, stem_multiplier):
     x = Convolution2D(nbr_filters * stem_multiplier, kernel_size=(3, 3), strides=(1, 1), padding='same')(x)
     x = BatchNormalization()(x)
     return x
@@ -291,7 +291,7 @@ def create_nasnet(input_shape, nbr_normal_cells, nbr_blocks, weight_decay,
                   drop_path_keep, epoch_tensor):
 
     ipt = Input(input_shape)
-    x = _create_steam(ipt, nbr_filters, stem_multiplier)
+    x = _create_stem(ipt, nbr_filters, stem_multiplier)
     x_1 = None
 
     cell_nbr = 0
