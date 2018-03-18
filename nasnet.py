@@ -16,7 +16,7 @@ class DropPath(Layer):
         super().build(input_shape)
 
     def call(self, x):
-        if keep_prob >= 1:
+        if self.keep_prob >= 1:
             return x
 
         batch_size = tf.shape(x)[0]
