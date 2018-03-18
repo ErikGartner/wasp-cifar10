@@ -7,7 +7,7 @@ from keras import backend as K
 
 
 def _sep_layer(x, nbr_filters, kernel_size, weight_decay, strides=(1, 1),
-               nbr_layers=2):
+               nbr_layers=2, keep_prob=1):
 
     for i in range(nbr_layers):
         x = Activation('relu')(x)
@@ -26,6 +26,7 @@ def _sep_layer(x, nbr_filters, kernel_size, weight_decay, strides=(1, 1),
 
         # Only first uses a stride other than (1, 1)
         strides = (1, 1)
+    x = _drop_path(x, keep_prob)
     return x
 
 
@@ -37,21 +38,23 @@ def _identity(x, nbr_filters, strides=(1, 1)):
     return x
 
 
-def _avg_layer(x, pool_size, nbr_filters, strides=(1, 1)):
+def _avg_layer(x, pool_size, nbr_filters, strides=(1, 1), keep_prob=1):
     x = AveragePooling2D(pool_size, padding='same', strides=strides)(x)
 
     if int(x.shape[3]) != nbr_filters:
         x = Convolution2D(nbr_filters, (1, 1), strides=(1, 1), padding='same')(x)
         x = BatchNormalization()(x)
+    x = _drop_path(x, keep_prob)
     return x
 
 
-def _max_layer(x, pool_size, nbr_filters, strides=(1, 1)):
+def _max_layer(x, pool_size, nbr_filters, strides=(1, 1), keep_prob=1):
     x = MaxPooling2D(pool_size, padding='same', strides=strides)(x)
 
     if int(x.shape[3]) != nbr_filters:
         x = Convolution2D(nbr_filters, (1, 1), strides=(1, 1), padding='same')(x)
         x = BatchNormalization()(x)
+    x = _drop_path(x, keep_prob)
     return x
 
 
@@ -97,9 +100,9 @@ def _factorized_reduction(x, nbr_filters, strides):
 
 
 def _drop_path(x, keep_prob):
-    is_training = K.learning_phase() == 1
-    if not is_training or keep_prob >= 1:
-        return x
+    #is_training = K.learning_phase() == 1
+    #if not is_training or keep_prob >= 1:
+    #    return x
 
     def drop_path_layer(x, keep_prob):
         batch_size = tf.shape(x)[0]
@@ -114,6 +117,28 @@ def _drop_path(x, keep_prob):
                arguments={'keep_prob': keep_prob},
                output_shape=lambda x: x)(x)
     return x
+
+
+def _calc_drop_keep_prob(keep_prob, cell_nbr, total_cells, epoch_tensor,
+                         max_epochs):
+    """
+    Scales the keep_prob with the layer number and epoch.
+    """
+    if keep_prob == 1:
+        return 1
+
+    prob = keep_prob
+
+    layer_ratio = (cell_nbr + 1) / total_cells
+    prob = 1 - layer_ratio * (1 - prob)
+    current_ratio = (epoch_tensor / max_epochs)
+    current_ratio = tf.cast(current_ratio, tf.float32)
+    current_ratio = tf.minimum(1.0, current_ratio)
+    prob = (1 - current_ratio * (1 - prob))
+    with tf.device('/cpu:0'):
+        tf.summary.scalar('drop_path_keep_prob', prob)
+
+    return prob
 
 
 def _concatenate_result(x_list):
@@ -136,27 +161,31 @@ def _create_cell_base(x, x_1, nbr_filters):
     return (x, x_1)
 
 
-def _create_reduction_cell(x, x_1, nbr_filters, weight_decay, strides):
+def _create_reduction_cell(x, x_1, nbr_filters, weight_decay, strides, keep_prob,
+                           cell_nbr, total_cells, epoch_tensor, max_epochs):
     x,  x_1 = _create_cell_base(x, x_1, nbr_filters)
 
-    sep7x7 = _sep_layer(x_1, nbr_filters, (7, 7), weight_decay, strides=strides)
-    sep5x5 = _sep_layer(x, nbr_filters, (5, 5), weight_decay, strides=strides)
+    dp_prob = _calc_drop_keep_prob(keep_prob, cell_nbr, total_cells,
+                                   epoch_tensor, max_epochs)
+
+    sep7x7 = _sep_layer(x_1, nbr_filters, (7, 7), weight_decay, strides=strides, keep_prob=dp_prob)
+    sep5x5 = _sep_layer(x, nbr_filters, (5, 5), weight_decay, strides=strides, keep_prob=dp_prob)
     y1 = Add()([sep7x7, sep5x5])
 
-    max3x3 = _max_layer(x, (3, 3), nbr_filters, strides=strides)
-    sep7x7 = _sep_layer(x_1, nbr_filters, (7, 7), weight_decay, strides=strides)
+    max3x3 = _max_layer(x, (3, 3), nbr_filters, strides=strides, keep_prob=dp_prob)
+    sep7x7 = _sep_layer(x_1, nbr_filters, (7, 7), weight_decay, strides=strides, keep_prob=dp_prob)
     y2 = Add()([max3x3, sep7x7])
 
-    avg3x3 = _avg_layer(x, (3, 3), nbr_filters, strides=strides)
-    sep5x5 = _sep_layer(x_1, nbr_filters, (5, 5), weight_decay, strides=strides)
+    avg3x3 = _avg_layer(x, (3, 3), nbr_filters, strides=strides, keep_prob=dp_prob)
+    sep5x5 = _sep_layer(x_1, nbr_filters, (5, 5), weight_decay, strides=strides, keep_prob=dp_prob)
     y3 = Add()([avg3x3, sep5x5])
 
-    max3x3 = _max_layer(x, (3, 3), nbr_filters, strides=strides)
-    sep3x3 = _sep_layer(y1, nbr_filters, (3, 3), weight_decay)
+    max3x3 = _max_layer(x, (3, 3), nbr_filters, strides=strides, keep_prob=dp_prob)
+    sep3x3 = _sep_layer(y1, nbr_filters, (3, 3), weight_decay, keep_prob=dp_prob)
     z1 = Add()([max3x3, sep3x3])
 
     # We only apply strides when working on x or x_1
-    avg3x3 = _avg_layer(y1, (3, 3), nbr_filters)
+    avg3x3 = _avg_layer(y1, (3, 3), nbr_filters, keep_prob=dp_prob)
     ident = _identity(y2, nbr_filters)
     z2 = Add()([avg3x3, ident])
 
@@ -164,27 +193,31 @@ def _create_reduction_cell(x, x_1, nbr_filters, weight_decay, strides):
     return result, int(result.shape[3])
 
 
-def _create_normal_cell(x, x_1, nbr_filters, weight_decay):
+def _create_normal_cell(x, x_1, nbr_filters, weight_decay, keep_prob, cell_nbr,
+                        total_cells, epoch_tensor, max_epochs):
     x,  x_1 = _create_cell_base(x, x_1, nbr_filters)
 
-    sep3x3 = _sep_layer(x, nbr_filters, (3, 3), weight_decay)
+    dp_prob = _calc_drop_keep_prob(keep_prob, cell_nbr, total_cells,
+                                   epoch_tensor, max_epochs)
+
+    sep3x3 = _sep_layer(x, nbr_filters, (3, 3), weight_decay, keep_prob=dp_prob)
     ident = _identity(x, nbr_filters)
     y1 = Add()([sep3x3, ident])
 
-    sep3x3 = _sep_layer(x_1, nbr_filters, (3, 3), weight_decay)
-    sep5x5 = _sep_layer(x, nbr_filters, (5, 5), weight_decay)
+    sep3x3 = _sep_layer(x_1, nbr_filters, (3, 3), weight_decay, keep_prob=dp_prob)
+    sep5x5 = _sep_layer(x, nbr_filters, (5, 5), weight_decay, keep_prob=dp_prob)
     y2 = Add()([sep3x3, sep5x5])
 
-    avg3x3 = _avg_layer(x, (3, 3), nbr_filters)
+    avg3x3 = _avg_layer(x, (3, 3), nbr_filters, keep_prob=dp_prob)
     ident = _identity(x_1, nbr_filters)
     y3 = Add()([avg3x3, ident])
 
-    avg3x3_1 = _avg_layer(x_1, (3, 3), nbr_filters)
-    avg3x3_2 = _avg_layer(x_1, (3, 3), nbr_filters)
+    avg3x3_1 = _avg_layer(x_1, (3, 3), nbr_filters, keep_prob=dp_prob)
+    avg3x3_2 = _avg_layer(x_1, (3, 3), nbr_filters, keep_prob=dp_prob)
     y4 = Add()([avg3x3_1, avg3x3_2])
 
-    sep5x5 = _sep_layer(x_1, nbr_filters, (5, 5), weight_decay)
-    sep3x3 = _sep_layer(x_1, nbr_filters, (3, 3), weight_decay)
+    sep5x5 = _sep_layer(x_1, nbr_filters, (5, 5), weight_decay, keep_prob=dp_prob)
+    sep3x3 = _sep_layer(x_1, nbr_filters, (3, 3), weight_decay, keep_prob=dp_prob)
     y5 = Add()([sep5x5, sep3x3])
 
     result = _concatenate_result([y1, y2, y3, y4, y5])
@@ -246,18 +279,21 @@ def _create_steam(x, nbr_filters, stem_multiplier):
 
 def create_nasnet(input_shape, nbr_normal_cells, nbr_blocks, weight_decay,
                   nbr_classes, nbr_filters, stem_multiplier, filter_multiplier,
-                  dimension_reduction, final_filters, dropout_prob=0.0):
+                  dimension_reduction, final_filters, max_epochs, dropout_prob,
+                  drop_path_keep, epoch_tensor):
 
     ipt = Input(input_shape)
     x = _create_steam(ipt, nbr_filters, stem_multiplier)
     x_1 = None
 
+    cell_nbr = 0
     filters = nbr_filters
     for i in range(nbr_blocks):
-
         for j in range(nbr_normal_cells):
-            y, _ = _create_normal_cell(x, x_1, filters,
-                                             weight_decay)
+            cell_nbr += 1
+            y, _ = _create_normal_cell(x, x_1, filters, weight_decay, drop_path_keep,
+                                       cell_nbr, nbr_normal_cells * nbr_blocks, epoch_tensor,
+                                       max_epochs)
             x_1 = x
             x = y
 
@@ -267,7 +303,10 @@ def create_nasnet(input_shape, nbr_normal_cells, nbr_blocks, weight_decay,
 
         # Reduction cell decreases HxW but increases filters
         filters = filters * filter_multiplier
-        y, _ = _create_reduction_cell(x, x_1, filters, weight_decay, (dimension_reduction, dimension_reduction))
+        y, _ = _create_reduction_cell(x, x_1, filters, weight_decay,
+                                      (dimension_reduction, dimension_reduction),
+                                      drop_path_keep, cell_nbr, nbr_normal_cells * nbr_blocks,
+                                      epoch_tensor, max_epochs)
         x_1 = x
         x = y
 
@@ -286,5 +325,9 @@ if __name__ == '__main__':
                           stem_multiplier=3,
                           filter_multiplier=2,
                           dimension_reduction=2,
-                          final_filters=768)
+                          final_filters=768,
+                          dropout_prob=0.0,
+                          drop_path_keep=0.6,
+                          max_epochs=300,
+                          epoch_tensor=tf.Variable(1, dtype=tf.int32, trainable=False))
     print(model.summary())
