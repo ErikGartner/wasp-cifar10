@@ -122,9 +122,6 @@ def _factorized_reduction(x, nbr_filters, strides):
 
 
 def _drop_path(x, keep_prob):
-    if keep_prob >= 1:
-        return x
-
     x = DropPath(keep_prob=keep_prob)(x)
     return x
 
