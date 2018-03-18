@@ -33,7 +33,7 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
         if epoch_tensor is not None:
             tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
 
-    checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
+    checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_dense_2_acc:.3f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
 
@@ -130,7 +130,7 @@ def train_model(max_epochs=300, start_lr=0.025,
         mul_train,
         callbacks=cbs, epochs=max_epochs,
         validation_data=mul_test,
-        use_multiprocessing=True, workers=2, max_queue_size=batch_size,
+        use_multiprocessing=False, max_queue_size=batch_size,
         verbose=1, initial_epoch=initial_epoch, steps_per_epoch=steps_per_epoch,
         validation_steps=validation_steps
     )
