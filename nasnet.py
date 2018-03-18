@@ -16,6 +16,9 @@ class DropPath(Layer):
         super().build(input_shape)
 
     def call(self, x):
+        if keep_prob >= 1:
+            return x
+
         batch_size = tf.shape(x)[0]
         noise_shape = [batch_size, 1, 1, 1]
         random_tensor = self.keep_prob
@@ -122,10 +125,6 @@ def _factorized_reduction(x, nbr_filters, strides):
 
 
 def _drop_path(x, keep_prob):
-    is_training = K.learning_phase() == 1
-    if not is_training or keep_prob >= 1:
-        return x
-
     x = DropPath(keep_prob=keep_prob)(x)
     return x
 
