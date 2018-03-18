@@ -16,17 +16,13 @@ class DropPath(Layer):
         super().build(input_shape)
 
     def call(self, x):
-        is_training = K.learning_phase() == 1
-        if not is_training:
-            return x
-
         batch_size = tf.shape(x)[0]
         noise_shape = [batch_size, 1, 1, 1]
         random_tensor = self.keep_prob
         random_tensor += tf.random_uniform(noise_shape, dtype=tf.float32)
         binary_tensor = tf.floor(random_tensor)
-        x = tf.div(x, self.keep_prob) * binary_tensor
-        return x
+        x_drop = tf.div(x, self.keep_prob) * binary_tensor
+        return K.in_train_phase(x_drop, alt=x)
 
     def compute_output_shape(self, input_shape):
         return input_shape
