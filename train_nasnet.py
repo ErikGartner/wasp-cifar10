@@ -10,8 +10,9 @@ from nasnet import create_nasnet
 from dataset import load_cifar10, multi_generator
 
 
-def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10,
-                     model=None, epoch_tensor=None):
+def create_callbacks(max_epochs, run_dir, start_lr,
+                     lr_decrease_factor=0.5, lr_patience=10,
+                     model=None, epoch_tensor=None, ):
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
@@ -33,13 +34,17 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
         if epoch_tensor is not None:
             tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
 
+    def cosine_decay(epoch, current_lr):
+        return tf.train.noisy_linear_cosine_decay(start_lr, epoch + 1, max_epochs)
+
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_dense_2_acc:.3f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
 
     cbs = []
-    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
-                                 verbose=1, min_lr=1e-7, patience=lr_patience))
+    #cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
+    #                             verbose=1, min_lr=1e-7, patience=lr_patience))
+    cbs.append(LearningRateScheduler(cosine_decay, verbose=1))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
     cbs.append(LambdaCallback(on_epoch_begin=update_epoch_tensor))
     cbs.append(checkpointing)
@@ -110,8 +115,8 @@ def train_model(max_epochs=300, start_lr=0.025,
     # Setup optimizer
     optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True, clipnorm=5.0)
 
-    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience,
-                           orig_model, epoch_tensor)
+    cbs = create_callbacks(max_epochs, run_dir, start_lr,lr_decrease_factor,
+                           lr_patience, orig_model, epoch_tensor)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   loss_weights=[1, 0.4],    # Weight the auxiliary head by 0.4
