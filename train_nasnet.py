@@ -51,7 +51,7 @@ def create_callbacks(max_epochs, run_dir, start_lr,
     return cbs
 
 
-def train_model(max_epochs=300, start_lr=0.025,
+def train_model(max_epochs=300, start_lr=0.025, drop_path_keep=0.6,
                 nbr_blocks=2, weight_decay=1e-4, nbr_filters=32, batch_size=32,
                 logdir='./logs', weightsdir='./weights_nasnet', lr_decrease_factor=0.5,
                 lr_patience=10, nbr_gpus=1, model_path=None, initial_epoch=0):
@@ -87,8 +87,8 @@ def train_model(max_epochs=300, start_lr=0.025,
                                            dimension_reduction=2,
                                            final_filters=768,
                                            dropout_prob=0.0,
-                                           drop_path_keep=0.6,
-                                           max_epochs=300,
+                                           drop_path_keep=drop_path_keep,
+                                           max_epochs=max_epochs,
                                            epoch_tensor=epoch_tensor)
         model = multi_gpu_model(orig_model, nbr_gpus)
 
@@ -107,8 +107,8 @@ def train_model(max_epochs=300, start_lr=0.025,
                                        dimension_reduction=2,
                                        final_filters=768,
                                        dropout_prob=0.0,
-                                       drop_path_keep=0.6,
-                                       max_epochs=300,
+                                       drop_path_keep=drop_path_keep,
+                                       max_epochs=max_epochs,
                                        epoch_tensor=epoch_tensor)
         model = orig_model
 
