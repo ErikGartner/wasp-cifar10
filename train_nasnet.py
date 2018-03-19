@@ -34,7 +34,7 @@ def create_callbacks(max_epochs, run_dir, start_lr,
         if epoch_tensor is not None:
             tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
 
-    def cosine_decay(epoch, current_lr):
+    def cosine_decay(epoch, lr):
         return tf.train.noisy_linear_cosine_decay(start_lr, epoch + 1, max_epochs)
 
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_dense_2_acc:.3f}.ckpt' % run_dir,
