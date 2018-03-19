@@ -35,7 +35,9 @@ def create_callbacks(max_epochs, run_dir, start_lr,
             tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
 
     def cosine_decay(epoch, lr):
-        return tf.train.noisy_linear_cosine_decay(start_lr, epoch + 1, max_epochs)
+        lr = tf.train.noisy_linear_cosine_decay(start_lr, epoch + 1, max_epochs)
+        lr = K.eval(lr)
+        return lr
 
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_dense_2_acc:.3f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
@@ -51,7 +53,7 @@ def create_callbacks(max_epochs, run_dir, start_lr,
     return cbs
 
 
-def train_model(max_epochs=300, start_lr=0.025, drop_path_keep=0.6,
+def train_model(max_epochs=600, start_lr=0.025, drop_path_keep=0.6,
                 nbr_blocks=2, weight_decay=1e-4, nbr_filters=32, batch_size=32,
                 logdir='./logs', weightsdir='./weights_nasnet', lr_decrease_factor=0.5,
                 lr_patience=10, nbr_gpus=1, model_path=None, initial_epoch=0):
