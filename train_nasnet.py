@@ -35,7 +35,12 @@ def create_callbacks(max_epochs, run_dir, start_lr,
             tf.assign(epoch_tensor, epoch + 1, name='update_epoch_tensor')
 
     def cosine_decay(epoch, lr):
-        lr = tf.train.noisy_linear_cosine_decay(start_lr, epoch + 1, max_epochs)
+        lr = tf.train.linear_cosine_decay(start_lr, epoch + 1, max_epochs,
+                                          num_periods=0.5, # 0.5 means no restart.
+                                          alpha=0.0,
+                                          beta=0.0,
+                                          name=None)
+
         lr = K.eval(lr)
         return lr
 
@@ -75,7 +80,7 @@ def dump_infomation(dump_dir, model, start_lr, drop_path_keep,
         f.write('batch_size: %s\n' % batch_size)
 
 
-def train_model(max_epochs=300, start_lr=0.025, drop_path_keep=0.6,
+def train_model(max_epochs=600, start_lr=0.025, drop_path_keep=0.6,
                 nbr_blocks=2, weight_decay=1e-4, nbr_filters=32, batch_size=32,
                 logdir='./logs', weightsdir='./weights_nasnet', lr_decrease_factor=0.5,
                 lr_patience=10, nbr_gpus=1, model_path=None, initial_epoch=0):
