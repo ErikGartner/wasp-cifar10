@@ -53,7 +53,29 @@ def create_callbacks(max_epochs, run_dir, start_lr,
     return cbs
 
 
-def train_model(max_epochs=600, start_lr=0.025, drop_path_keep=0.6,
+def dump_infomation(dump_dir, model, start_lr, drop_path_keep,
+                    nbr_blocks, nbr_filters, batch_size):
+    if dump_dir is None:
+        return
+
+    os.makedirs(dump_dir, exist_ok=True)
+    with open(os.path.join(dump_dir, 'model.json'), 'w') as f:
+        json.dump(model.to_json(), f, indent=2)
+
+    def print_to_file(s):
+        with open(os.path.join(dump_dir, 'model.txt'), 'a') as f:
+            print(s, file=f)
+    model.summary(print_fn=print_to_file)
+
+    with open(os.path.join(dump_dir, 'params.txt'), 'w') as f:
+        f.write('start_lr: %s\n' % start_lr)
+        f.write('drop_path_keep: %s\n' % drop_path_keep)
+        f.write('nbr_blocks: %s\n' % nbr_blocks)
+        f.write('nbr_filters: %s\n' % nbr_filters)
+        f.write('batch_size: %s\n' % batch_size)
+
+
+def train_model(max_epochs=300, start_lr=0.025, drop_path_keep=0.6,
                 nbr_blocks=2, weight_decay=1e-4, nbr_filters=32, batch_size=32,
                 logdir='./logs', weightsdir='./weights_nasnet', lr_decrease_factor=0.5,
                 lr_patience=10, nbr_gpus=1, model_path=None, initial_epoch=0):
@@ -117,12 +139,16 @@ def train_model(max_epochs=600, start_lr=0.025, drop_path_keep=0.6,
     # Setup optimizer
     optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True, clipnorm=5.0)
 
-    cbs = create_callbacks(max_epochs, run_dir, start_lr,lr_decrease_factor,
+    cbs = create_callbacks(max_epochs, run_dir, start_lr, lr_decrease_factor,
                            lr_patience, orig_model, epoch_tensor)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   loss_weights=[1, 0.4],    # Weight the auxiliary head by 0.4
                   metrics=['accuracy'])
+
+    # Write model info to file
+    dump_infomation(os.path.join(logdir, run_dir), orig_model, start_lr,
+                    drop_path_keep, nbr_blocks, nbr_filters, batch_size)
 
     # Setup the multi output generators
     train = generator_train.flow(x_train, y_train, batch_size=batch_size, seed=0)
