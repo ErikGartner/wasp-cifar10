@@ -1,0 +1,6 @@
+dense_layers: [20, 20, 20]
+growth_rate: 60
+compression: 0.5
+dropout: 0.0
+weight_decay: 0.0001
+batch_size: 64
