@@ -33,7 +33,7 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
                 super().set_model(model)
 
     cbs = []
-    checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.2f}.ckpt' % run_dir,
+    checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.3f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
     cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
