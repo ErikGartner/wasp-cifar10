@@ -14,7 +14,7 @@ from dataset import load_cifar10
 
 
 def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10,
-                     model=None):
+                     start_lr, model=None):
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
@@ -32,12 +32,22 @@ def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10
             else:
                 super().set_model(model)
 
+    def cosine_decay(epoch, lr):
+        lr = tf.train.linear_cosine_decay(start_lr, epoch + 1, max_epochs,
+                                          num_periods=0.5, # 0.5 means no restart.
+                                          alpha=0.0,
+                                          beta=0.0,
+                                          name=None)
+        lr = K.eval(lr)
+        return lr
+
     cbs = []
     checkpointing = MultiGPUCheckpoint(filepath='./weights/weights_%s_.{epoch:02d}-{val_acc:.3f}.ckpt' % run_dir,
                                        verbose=1, period=1, save_best_only=True)
     checkpointing.model = model
-    cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
-                                 verbose=1, min_lr=1e-7, patience=lr_patience))
+    cbs.append(LearningRateScheduler(cosine_decay, verbose=1))
+    #cbs.append(ReduceLROnPlateau(monitor='val_loss', factor=lr_decrease_factor,
+    #                             verbose=1, min_lr=1e-7, patience=lr_patience))
     cbs.append(TensorBoard(log_dir='./logs/%s' % run_dir, batch_size=64))
     cbs.append(checkpointing)
     return cbs
@@ -114,7 +124,8 @@ def train_model(max_epochs=300, start_lr=0.1,
     # Setup optimizer
     optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True)
 
-    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience, orig_model)
+    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience,
+                           start_lr, orig_model)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
