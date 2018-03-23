@@ -13,8 +13,8 @@ from densenet import create_densenet
 from dataset import load_cifar10
 
 
-def create_callbacks(max_epochs, run_dir, lr_decrease_factor=0.5, lr_patience=10,
-                     start_lr, model=None):
+def create_callbacks(max_epochs, run_dir, start_lr, lr_decrease_factor=0.5,
+                     lr_patience=10, model=None):
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
@@ -124,8 +124,8 @@ def train_model(max_epochs=300, start_lr=0.1,
     # Setup optimizer
     optimizer = SGD(lr=start_lr, momentum=0.9, nesterov=True)
 
-    cbs = create_callbacks(max_epochs, run_dir, lr_decrease_factor, lr_patience,
-                           start_lr, orig_model)
+    cbs = create_callbacks(max_epochs, run_dir, start_lr, lr_decrease_factor,
+                           lr_patience, orig_model)
     model.compile(optimizer=optimizer,
                   loss='sparse_categorical_crossentropy',
                   metrics=['acc'])
