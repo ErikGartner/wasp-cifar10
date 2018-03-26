@@ -2,6 +2,8 @@ import sys
 import time
 import os
 
+import numpy as np
+
 from keras.models import load_model
 from keras.optimizers import *
 from keras.metrics import *
@@ -9,13 +11,10 @@ from keras.metrics import *
 from dataset import load_cifar10
 
 
-def load_model(model_path=None):
+def init_model(model_path):
 
     # Load the dataset with augmentations
     start_time = time.time()
-    ((generator_train, generator_test),
-     (x_train, y_train), (x_test, y_test),
-     (x_val, y_val)) = load_cifar10()
 
     model = load_model(model_path)
 
@@ -31,9 +30,10 @@ def predict_models(models, x):
     for model in models:
         y = model.predict(x, verbose=0)
         Y.append(y)
-    Y = np.mean(Y)
-    Y = np.rint(Y)
-    return
+    Y = np.array(Y)
+    Y = np.mean(Y, axis=0)
+    Y = np.rint(Y).astype(np.int32)
+    return Y
 
 
 if __name__ == '__main__':
@@ -46,9 +46,11 @@ if __name__ == '__main__':
 
         try:
             print('Loading %s' % model_file)
-            model = test_model(os.path.join(path, model_file))
+            model = init_model(os.path.join(path, model_file))
             models.append(model)
-
+            
+            models = models * 2
+            break
         except RuntimeError:
             print('Some error occured!')
 
