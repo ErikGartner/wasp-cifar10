@@ -26,13 +26,12 @@ def init_model(model_path):
 
 
 def predict_models(models, x):
-    Y = []
-    for model in models:
-        y = model.predict(x, verbose=0)
-        Y.append(y)
-    Y = np.array(Y)
-    Y = np.mean(Y, axis=0)
-    Y = np.rint(Y).astype(np.int32)
+    predictions = list(map(lambda model: model.predict(x)))
+
+    for i, pred in enumerate(predictions):
+        predictions[i] = np.asarray(pred).reshape(len(predictions), 10, 1)
+    weighted_avg = np.mean(predictions, axis=2)
+    votes = np.argmax(weighted_avg, axis=1)
     return Y
 
 
@@ -48,7 +47,7 @@ if __name__ == '__main__':
             print('Loading %s' % model_file)
             model = init_model(os.path.join(path, model_file))
             models.append(model)
-            
+
             models = models * 2
             break
         except RuntimeError:
