@@ -18,9 +18,9 @@ def create_callbacks(max_epochs, run_dir, start_lr, lr_decrease_factor=0.5,
 
     class MultiGPUCheckpoint(ModelCheckpoint):
 
-        def __init__(self, filepath, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
+        def __init__(self, filepath, monitor='val_acc', verbose=0,
+                     save_best_only=False, save_weights_only=False,
+                     mode='auto', period=1):
             super().__init__(filepath, monitor, verbose,
                      save_best_only, save_weights_only,
                      mode, period)
