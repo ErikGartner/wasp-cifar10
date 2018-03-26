@@ -29,7 +29,7 @@ def predict_models(models, x):
     predictions = list(map(lambda model: model.predict(x)))
 
     for i, pred in enumerate(predictions):
-        predictions[i] = np.asarray(pred).reshape(len(predictions), 10, 1)
+        predictions[i] = np.asarray(pred).reshape(len(x), 10, 1)
     weighted_avg = np.mean(predictions, axis=2)
     votes = np.argmax(weighted_avg, axis=1)
     return Y
