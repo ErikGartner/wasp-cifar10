@@ -38,48 +38,27 @@ def predict_models(models, x):
 
 
 if __name__ == '__main__':
-    #
-    # path = sys.argv[1]
-    # print("Loading all models in %s" % path)
-    #
-    # models = []
-    # for model_file in os.listdir(path):
-    #
-    #     try:
-    #         print('Loading %s' % model_file)
-    #         model = init_model(os.path.join(path, model_file))
-    #         models.append(model)
-    #
-    #         models = models * 2
-    #         break
-    #     except RuntimeError:
-    #         print('Some error occured!')
-    #
-    # # Evaluate using ensemble:
-    # ((generator_train, generator_test),
-    #  (x_train, y_train), (x_test, y_test),
-    #  (x_val, y_val)) = load_cifar10()
+    
+    path = sys.argv[1]
+    print("Loading all models in %s" % path)
 
-    from keras.models import Sequential
-    from keras.layers import Dense, Activation
+    models = []
+    for model_file in os.listdir(path):
 
-    model = Sequential([
-        Dense(32, input_shape=(10,)),
-        Activation('relu'),
-        Dense(10),
-        Activation('softmax'),
-    ])
-    optimizer = SGD(lr=0.1, momentum=0.9, nesterov=True)
-    model.compile(optimizer=optimizer,
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['acc'])
+        try:
+            print('Loading %s' % model_file)
+            model = init_model(os.path.join(path, model_file))
+            models.append(model)
 
+            models = models * 2
+            break
+        except RuntimeError:
+            print('Some error occured!')
 
-
-    models = [model, model]
-
-    x_test = np.zeros((100, 10))
-    y_test = np.zeros((100, 1))
+    # Evaluate using ensemble:
+    ((generator_train, generator_test),
+     (x_train, y_train), (x_test, y_test),
+     (x_val, y_val)) = load_cifar10()
 
     # predict using ensabmle:
     y = predict_models(models, x_test)
