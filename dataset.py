@@ -1,5 +1,5 @@
 from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import *
 
 from sklearn.model_selection import train_test_split
 
@@ -55,14 +55,15 @@ def load_cifar10(val_size=0.1):
         cval=0.,
         horizontal_flip=True,
         vertical_flip=False,
-        rescale=None,
-        preprocessing_function=preprocessing
+        rescale=None
     )
 
     generator_test = ImageDataGenerator(
         featurewise_center=True,
         featurewise_std_normalization=True
     )
+
+    generator_train.set_pipeline([standardize, random_transform, preprocessing])
 
     generator_train.fit(x_train)
     generator_test.fit(x_train)
