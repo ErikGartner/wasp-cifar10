@@ -52,7 +52,6 @@ if __name__ == '__main__':
             model = init_model(os.path.join(path, model_file))
             models.append(model)
 
-            break
         except RuntimeError:
             print('Some error occured!')
 
