@@ -16,7 +16,7 @@ python_version = "3.5"
 
 [packages]
 
-tensorflow-gpu = "==1.4.0"
+tensorflow-gpu = "==1.6.0"
 keras = "*"
 hyperopt = "*"
 scikit-learn = "*"

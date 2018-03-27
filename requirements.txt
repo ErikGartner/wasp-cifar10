@@ -15,8 +15,7 @@ pyyaml==3.12
 scikit-learn==0.19.1
 scipy==1.0.0
 six==1.11.0
-tensorflow-gpu==1.4.0
-tensorflow-tensorboard==0.4.0
+tensorflow-gpu==1.6.0
 werkzeug==0.14.1
 wheel==0.30.0; python_version >= '3'
 h5py

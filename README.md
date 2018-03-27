@@ -1,4 +1,41 @@
-# CIFAR Challenge
+# Cifar10 Challenge
+*The code for my Cifar10 assignment in the WASP course.*
+
+There are two types of models: a DenseNet model and a NASNet model.
+
+The pretrained models can be found in the [models folder](models).
+
+## Requirements
+All the code is written for Python 3.x and to run it you also need several
+Python packages preferably along with Nvidia CUDA to train the models on the GPU.
+
+To install the Python dependencies use:
+```bash
+pip install -r requirements.txt
+```
+
+## Training
+
+To train the respective model use:
+
+```bash
+# DenseNet
+python train.m
+
+# NASNet
+python train_nasnet.py
+```
+
+## Testing
+
+To test and evaluate the model use:
+
+```bash
+python test.m <model or directory of models>
+
+# To test an ensemble of models that vote use
+python test_ensemble.m <directory of models>
+```
 
 ## References
 - [DenseNet](https://arxiv.org/pdf/1608.06993.pdf)
